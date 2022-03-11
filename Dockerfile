@@ -9,8 +9,7 @@ RUN apt-get -qq update && \
     ldconfig
 
 COPY oci8.pc /usr/share/pkgconfig/oci8.pc
-RUN go get -d github.com/freenetdigital/prometheus_oracle_exporter
-RUN cd $GOPATH/src/github.com/freenetdigital/prometheus_oracle_exporter/ && GOOS=linux go build -ldflags "-s -w" -o /app .
+ADD https://github.com/floyd871/prometheus_oracle_exporter/releases/download/1.1.5/prometheus_oracle_exporter-amd64 /app
 
 FROM ubuntu:18.04
 MAINTAINER Seth Miller <seth@sethmiller.me>
@@ -27,15 +26,10 @@ ENV NLS_LANG=AMERICAN_AMERICA.UTF8
 
 COPY --from=builder /app /
 
-ARG CONFD_VERSION="0.15.0"
-ADD https://github.com/kelseyhightower/confd/releases/download/v${CONFD_VERSION}/confd-${CONFD_VERSION}-linux-amd64 /usr/bin/confd
+ADD oracle.conf /etc/oracle_exporter/
 ADD entrypoint.sh /
-RUN chmod +x /usr/bin/confd /entrypoint.sh
 
-#Add confd templates
-RUN mkdir -p /etc/confd/conf.d && mkdir -p /etc/confd/templates
-ADD ./conf.d /etc/confd/conf.d
-ADD ./templates /etc/confd/templates
+RUN chmod +x /entrypoint.sh /app
 
 EXPOSE 9161
 ENTRYPOINT ["/entrypoint.sh"]
