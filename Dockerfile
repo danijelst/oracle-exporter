@@ -1,35 +1,55 @@
-FROM golang:stretch AS builder
+FROM golang:1.14 AS build
+
+ARG ORACLE_VERSION
+ENV ORACLE_VERSION=${ORACLE_VERSION}
+ENV LD_LIBRARY_PATH "/usr/lib/oracle/${ORACLE_VERSION}/client64/lib"
+
+RUN apt-get -qq update && apt-get install --no-install-recommends -qq libaio1 rpm
+COPY oci8.pc.template /usr/share/pkgconfig/oci8.pc
+RUN sed -i "s/@ORACLE_VERSION@/$ORACLE_VERSION/g" /usr/share/pkgconfig/oci8.pc
+COPY oracle*${ORACLE_VERSION}*.rpm /
+RUN rpm -Uh --nodeps /oracle-instantclient*.x86_64.rpm && rm /*.rpm
+RUN echo $LD_LIBRARY_PATH >> /etc/ld.so.conf.d/oracle.conf && ldconfig
+
+WORKDIR /go/src/oracle-exporter
+COPY . .
+RUN go get -d -v
+
+ARG VERSION
+ENV VERSION ${VERSION:-0.1.0}
+
+ENV PKG_CONFIG_PATH /go/src/oracle-exporter
+ENV GOOS            linux
+
+RUN go build -v -ldflags "-X main.Version=${VERSION} -s -w"
+
+FROM ubuntu:20.04
+LABEL authors="Seth Miller,Yannig Perré"
+LABEL maintainer="Danijel Fischer <danijel@stojnic.com>"
+
+ENV VERSION ${VERSION:-0.1.0}
+ENV DEBIAN_FRONTEND=noninteractive
+
+COPY oracle-instantclient*${ORACLE_VERSION}*basic*.rpm /
 
 RUN apt-get -qq update && \
-    apt-get install --no-install-recommends --allow-unauthenticated -qq libaio1 rpm wget && \
-    wget --no-check-certificate https://raw.githubusercontent.com/bumpx/oracle-instantclient/master/oracle-instantclient12.2-basic-12.2.0.1.0-1.x86_64.rpm && \
-    wget --no-check-certificate https://raw.githubusercontent.com/bumpx/oracle-instantclient/master/oracle-instantclient12.2-devel-12.2.0.1.0-1.x86_64.rpm && \
-    rpm -Uvh --nodeps oracle*rpm && \
-    echo /usr/lib/oracle/12.2/client64/lib | tee /etc/ld.so.conf.d/oracle.conf && \
-    ldconfig
+  apt-get -qq install --no-install-recommends tzdata libaio1 rpm -y && rpm -Uvh --nodeps /oracle*${ORACLE_VERSION}*rpm && \
+    rm -f /oracle*rpm
 
-COPY oci8.pc /usr/share/pkgconfig/oci8.pc
-ADD https://github.com/floyd871/prometheus_oracle_exporter/releases/download/1.1.5/prometheus_oracle_exporter-amd64 /app
+RUN adduser --system --uid 1000 --group appuser \
+  && usermod -a -G 0,appuser appuser
 
-FROM ubuntu:18.04
-MAINTAINER Seth Miller <seth@sethmiller.me>
-RUN apt-get -qq update && \
-    apt-get install --no-install-recommends -qq libaio1 rpm wget -y && \
-    wget --no-check-certificate https://raw.githubusercontent.com/bumpx/oracle-instantclient/master/oracle-instantclient12.2-basic-12.2.0.1.0-1.x86_64.rpm && \
-    rpm -Uvh --nodeps oracle*rpm && \
-    rm -f oracle*rpm && \
-    apt-get remove -y rpm && \
-    apt-get -y autoremove && apt-get -y autoclean && rm -rf /var/lib/apt/lists/*
+ARG ORACLE_VERSION
+ENV ORACLE_VERSION=${ORACLE_VERSION}
+ENV LD_LIBRARY_PATH "/usr/lib/oracle/${ORACLE_VERSION}/client64/lib"
+RUN echo $LD_LIBRARY_PATH >> /etc/ld.so.conf.d/oracle.conf && ldconfig
 
-ENV LD_LIBRARY_PATH /usr/lib/oracle/12.2/client64/lib
-ENV NLS_LANG=AMERICAN_AMERICA.UTF8
+COPY --chown=appuser:appuser --from=build /go/src/oracle-exporter/oracle-exporter /oracle-exporter
 
-COPY --from=builder /app /
-
-ADD oracle.conf /etc/oracle_exporter/
-ADD entrypoint.sh /
-
-RUN chmod +x /entrypoint.sh /app
+ADD ./oracle.conf /etc/oracle-exporter/
 
 EXPOSE 9161
-ENTRYPOINT ["/entrypoint.sh"]
+
+USER appuser
+
+ENTRYPOINT ["/oracle-exporter"]
