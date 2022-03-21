@@ -31,6 +31,7 @@ jobs:
           if [ "${{ github.event_name }}" = "schedule" ]; then
             MAKE_VERSION=nightly
           fi
+          echo "VERSION=${MAKE_VERSION}" >> $GITHUB_ENV
         
       - name: Install dependencies
         run: make oci.pc prereq deps
@@ -39,12 +40,18 @@ jobs:
         run: make test
         
       - name: Run distcheck
-        run: make clean linux docker -e DOCKER_IMAGE=${IMAGE_NAME} VERSION=${MAKE_VERSION}
+        run: make clean linux docker -e DOCKER_IMAGE=${DOCKER_IMAGE} VERSION=${VERSION}
+
+      - name: Login to DockerHub
+        if: success() && github.event_name != 'pull_request'
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Push Docker image
         id: build-and-push
         run: |
-          docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" &&
           docker push ${DOCKER_IMAGE}:${VERSION:-latest}               &&
           docker push ${DOCKER_IMAGE}:latest                           &&
           docker push ${DOCKER_IMAGE}:${VERSION:-latest}-oraclelinux   &&
