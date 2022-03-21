@@ -41,7 +41,7 @@ RUN ldconfig "$LD_LIBRARY_PATH"
 
 RUN chmod 755 /oracle-exporter
 
-ADD ./oracle.conf.example /etc/oracle-exporter/oracle.conf
 EXPOSE 9161
 
-ENTRYPOINT ["/oracle-exporter"]
+COPY ./oracle.conf.example /etc/oracle-exporter/oracle.conf
+ENTRYPOINT ["/app/oracle-exporter", "-configfile", "/etc/oracle-exporter/oracle.conf"]

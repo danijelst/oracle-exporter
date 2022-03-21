@@ -5,3 +5,5 @@ dist/
 *.apk
 *.pub
 oci8.pc
+conf/
+trace/
