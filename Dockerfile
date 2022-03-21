@@ -50,5 +50,5 @@ EXPOSE 9161
 
 USER appuser
 
-ADD ./oracle.conf /etc/oracle-exporter/
+ADD ./oracle.conf.example /etc/oracle-exporter/oracle.conf
 ENTRYPOINT ["/oracle-exporter"]

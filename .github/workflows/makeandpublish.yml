@@ -39,7 +39,7 @@ jobs:
       - name: Run test
         run: make test
         
-      - name: Run distcheck
+      - name: Build Docker
         run: make clean linux docker -e DOCKER_IMAGE=${DOCKER_IMAGE} VERSION=${VERSION}
 
       - name: Login to DockerHub
