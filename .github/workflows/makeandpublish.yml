@@ -24,22 +24,22 @@ jobs:
       - name: Prepare
         id: prepare
         run: |
-          VERSION=edge
+          MAKE_VERSION=edge
           if [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
+            MAKE_VERSION=${GITHUB_REF#refs/tags/v}
           fi
           if [ "${{ github.event_name }}" = "schedule" ]; then
-            VERSION=nightly
+            MAKE_VERSION=nightly
           fi
         
       - name: Install dependencies
-        run: make oci.pc prereq deps -e DOCKER_IMAGE=$IMAGE_NAME VERSION=$VERSION
+        run: make oci.pc prereq deps
         
-      - name: Run te
-        run: make test -e DOCKER_IMAGE=$IMAGE_NAME VERSION=$VERSION
+      - name: Run test
+        run: make test
         
       - name: Run distcheck
-        run: make clean linux docker -e DOCKER_IMAGE=$IMAGE_NAME VERSION=$VERSION
+        run: make clean linux docker -e DOCKER_IMAGE=${IMAGE_NAME} VERSION=${MAKE_VERSION}
 
       - name: Push Docker image
         id: build-and-push

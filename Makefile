@@ -8,7 +8,6 @@ RPM_VERSION    ?= $(ORACLE_VERSION).0.0.0-1
 ORA_RPM         = oracle-instantclient$(ORACLE_VERSION)-devel-$(RPM_VERSION).$(ARCH).rpm oracle-instantclient$(ORACLE_VERSION)-basic-$(RPM_VERSION).$(ARCH).rpm
 LD_LIBRARY_PATH = /usr/lib/oracle/$(ORACLE_VERSION)/client64/lib
 BUILD_ARGS      = --build-arg VERSION=$(VERSION) --build-arg ORACLE_VERSION=$(ORACLE_VERSION)
-LEGACY_TABLESPACE = --build-arg LEGACY_TABLESPACE=.legacy-tablespace
 DIST_DIR        = oracle-exporter.$(VERSION)-ora$(ORACLE_VERSION).linux-${GOARCH}
 ARCHIVE         = oracle-exporter.$(VERSION)-ora$(ORACLE_VERSION).linux-${GOARCH}.tar.gz
 DOCKER_IMAGE    = danijelst/oracle-exporter
@@ -35,14 +34,12 @@ linux: oci.pc
 	@echo build linux
 	mkdir -p ./dist/$(DIST_DIR)
 	PKG_CONFIG_PATH=${PWD} GOOS=linux go build $(GOFLAGS) -o ./dist/$(DIST_DIR)/oracle-exporter
-	cp default-metrics.toml ./dist/$(DIST_DIR)
 	(cd dist ; tar cfz $(ARCHIVE) $(DIST_DIR))
 
 darwin: oci.pc
 	@echo build darwin
 	mkdir -p ./dist/oracle-exporter.$(VERSION).darwin-${GOARCH}
 	PKG_CONFIG_PATH=${PWD} GOOS=darwin go build $(GOFLAGS) -o ./dist/oracle-exporter.$(VERSION).darwin-${GOARCH}/oracle-exporter
-	cp default-metrics.toml ./dist/oracle-exporter.$(VERSION).darwin-${GOARCH}
 	(cd dist ; tar cfz oracle-exporter.$(VERSION).darwin-${GOARCH}.tar.gz oracle-exporter.$(VERSION).darwin-${GOARCH})
 
 local-build:  linux
