@@ -62,6 +62,7 @@ func cleanIp(s string) string {
 
 func loadConfig() bool {
 	path, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	log.Infoln("Loading config path", path)
 	if err != nil {
 		log.Fatalf("error: %v", err)
 	}
@@ -73,6 +74,7 @@ func loadConfig() bool {
 	} else {
 		err := yaml.Unmarshal(content, &config)
 		if err != nil {
+			log.Infoln(&config, content)
 			log.Fatalf("error: %v", err)
 			return false
 		}

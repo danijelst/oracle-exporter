@@ -43,5 +43,5 @@ ENV LD_LIBRARY_PATH "/usr/lib/oracle/${ORACLE_VERSION}/client64/lib"
 
 EXPOSE 9161
 
-ADD ./oracle.conf.example /etc/oracle-exporter/oracle.conf
-ENTRYPOINT ["/oracle-exporter"]
+COPY ./oracle.conf.example /etc/oracle-exporter/oracle.conf
+ENTRYPOINT ["/app/oracle-exporter", "-configfile", "/etc/oracle-exporter/oracle.conf"]

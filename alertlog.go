@@ -34,7 +34,8 @@ type oraerr struct {
 
 var (
 	Errors    []oraerr
-	oralayout = "Mon Jan 02 15:04:05 2006"
+	//oralayout = "Mon Jan 02 15:04:05 2006"
+	oralayout = "2006-01-02T15:04:05.999999-07:00"
 	lastlog   Lastlogs
 )
 
@@ -112,7 +113,6 @@ func addError(conf int, ora string, text string) {
 func (e *Exporter) ScrapeAlertlog() {
 	loc := time.Now().Location()
 	re := regexp.MustCompile(`O(RA|GG)-[0-9]+`)
-
 	ReadAccess()
 	for conf, _ := range config.Cfgs {
 		if len(config.Cfgs[conf].Alertlog) > 0 {

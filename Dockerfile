@@ -44,11 +44,11 @@ ENV ORACLE_VERSION=${ORACLE_VERSION}
 ENV LD_LIBRARY_PATH "/usr/lib/oracle/${ORACLE_VERSION}/client64/lib"
 RUN echo $LD_LIBRARY_PATH >> /etc/ld.so.conf.d/oracle.conf && ldconfig
 
-COPY --chown=appuser:appuser --from=build /go/src/oracle-exporter/oracle-exporter /oracle-exporter
+COPY --chown=appuser:appuser --from=build /go/src/oracle-exporter/oracle-exporter /app/oracle-exporter
 
 EXPOSE 9161
 
 USER appuser
 
-ADD ./oracle.conf.example /etc/oracle-exporter/oracle.conf
-ENTRYPOINT ["/oracle-exporter"]
+COPY ./oracle.conf.example /etc/oracle-exporter/oracle.conf
+ENTRYPOINT ["/app/oracle-exporter", "-configfile", "/etc/oracle-exporter/oracle.conf"]
