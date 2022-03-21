@@ -65,7 +65,7 @@ glibc-2.29-r0.apk:
 	wget -q -O glibc-2.29-r0.apk https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.29-r0/glibc-2.29-r0.apk
 
 oraclelinux-image: $(ORA_RPM)
-	docker build -f oraclelinux/Dockerfile $(BUILD_ARGS) -t "$(DOCKER_IMAGE):$(VERSION)-oraclelinux" .
+	docker build -f ./Dockerfile_oraclelinux $(BUILD_ARGS) -t "$(DOCKER_IMAGE):$(VERSION)-oraclelinux" .
 	docker tag "$(DOCKER_IMAGE):$(VERSION)-oraclelinux" "$(DOCKER_IMAGE):oraclelinux"
 
 ubuntu-image: $(ORA_RPM)
@@ -73,7 +73,7 @@ ubuntu-image: $(ORA_RPM)
 	docker tag "$(DOCKER_IMAGE):$(VERSION)" "$(DOCKER_IMAGE):latest"
 
 alpine-image: $(ORA_RPM) sgerrand.rsa.pub glibc-2.29-r0.apk
-	docker build -f alpine/Dockerfile $(BUILD_ARGS) -t "$(DOCKER_IMAGE):$(VERSION)-alpine" .
+	docker build -f ./Dockerfile_alpine $(BUILD_ARGS) -t "$(DOCKER_IMAGE):$(VERSION)-alpine" .
 	docker tag "$(DOCKER_IMAGE):$(VERSION)-alpine" "$(DOCKER_IMAGE):alpine"
 
 travis: oci.pc prereq deps test linux docker
