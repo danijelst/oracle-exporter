@@ -1,0 +1,53 @@
+name: Makefile CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+    tags:
+      - v*
+
+env:
+  REGISTRY: docker.io
+  DOCKER_IMAGE: ${{ github.repository }}
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Prepare
+        id: prepare
+        run: |
+          VERSION=edge
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          fi
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            VERSION=nightly
+          fi
+        
+      - name: Install dependencies
+        run: make oci.pc prereq deps -e DOCKER_IMAGE=$IMAGE_NAME VERSION=$VERSION
+        
+      - name: Run te
+        run: make test -e DOCKER_IMAGE=$IMAGE_NAME VERSION=$VERSION
+        
+      - name: Run distcheck
+        run: make clean linux docker -e DOCKER_IMAGE=$IMAGE_NAME VERSION=$VERSION
+
+      - name: Push Docker image
+        id: build-and-push
+        run: |
+          docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}" &&
+          docker push ${DOCKER_IMAGE}:${VERSION:-latest}               &&
+          docker push ${DOCKER_IMAGE}:latest                           &&
+          docker push ${DOCKER_IMAGE}:${VERSION:-latest}-oraclelinux   &&
+          docker push ${DOCKER_IMAGE}:oraclelinux                      &&
+          docker push ${DOCKER_IMAGE}:${VERSION:-latest}-alpine        &&
+          docker push ${DOCKER_IMAGE}:alpine
