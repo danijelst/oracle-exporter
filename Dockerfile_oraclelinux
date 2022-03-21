@@ -37,7 +37,6 @@ RUN yum -y install oracle-release-el7 && \
 COPY --from=build /go/src/oracle-exporter/oracle-exporter /oracle-exporter
 
 RUN chmod 755 /oracle-exporter && \
-    chmod 644 /default-metrics.toml && \
     groupadd www-data && useradd -g www-data www-data
 USER www-data
 ENV LD_LIBRARY_PATH "/usr/lib/oracle/${ORACLE_VERSION}/client64/lib"
