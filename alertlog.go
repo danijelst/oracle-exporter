@@ -106,6 +106,7 @@ func addError(conf int, ora string, text string) {
 			ip = len(text)
 		}
 		ora := oraerr{ora: ora, text: text[is+1 : ip], ignore: ignore, count: 1}
+		log.Infoln("Adding error: ", ora)
 		Errors = append(Errors, ora)
 	}
 }
